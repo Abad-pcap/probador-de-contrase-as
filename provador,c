@@ -1,0 +1,73 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define MAX_CONTRASEÑAS 100  // Máximo número de contraseñas comunes
+#define MAX_LONGITUD 50      // Longitud máxima de una contraseña
+
+// Función para cargar contraseñas comunes desde un archivo
+int cargar_contraseñas_comunes(const char *nombre_archivo, char contraseñas_comunes[MAX_CONTRASEÑAS][MAX_LONGITUD]) {
+    FILE *archivo = fopen(nombre_archivo, "r");
+    if (archivo == NULL) {
+        printf("Error: No se pudo abrir el archivo '%s'.\n", nombre_archivo);
+        return -1; // Indicar error al abrir el archivo
+    }
+
+    int contador = 0;
+    while (contador < MAX_CONTRASEÑAS && fgets(contraseñas_comunes[contador], MAX_LONGITUD, archivo) != NULL) {
+        // Eliminar el salto de línea al final de cada línea
+        contraseñas_comunes[contador][strcspn(contraseñas_comunes[contador], "\n")] = '\0';
+        contador++;
+    }
+
+    fclose(archivo);
+    return contador;
+}
+
+// Función para verificar si una contraseña está en la lista de contraseñas comunes
+int es_contraseña_comun(const char *contraseña, char contraseñas_comunes[MAX_CONTRASEÑAS][MAX_LONGITUD], int total_contraseñas) {
+    for (int i = 0; i < total_contraseñas; i++) {
+        if (strcmp(contraseña, contraseñas_comunes[i]) == 0) {
+            return 1; // La contraseña es común
+        }
+    }
+    return 0; // La contraseña no es común
+}
+
+int main() {
+    char contraseñas_comunes[MAX_CONTRASEÑAS][MAX_LONGITUD];
+    char contraseña_usuario[MAX_LONGITUD];
+    int total_contraseñas;
+
+    // Nombre del archivo que contiene las contraseñas comunes
+    const char *nombre_archivo = "contraseñas_comunes.txt";
+
+    printf("=== Detector de Contraseñas Comunes ===\n");
+
+    // Cargar contraseñas comunes desde el archivo
+    total_contraseñas = cargar_contraseñas_comunes(nombre_archivo, contraseñas_comunes);
+
+    if (total_contraseñas == -1) {
+        return 1; // Salir si no se pudo cargar el archivo
+    }
+
+    if (total_contraseñas == 0) {
+        printf("El archivo '%s' está vacío. No hay contraseñas comunes para verificar.\n", nombre_archivo);
+        return 1;
+    }
+
+    // Solicitar al usuario la contraseña para verificar
+    printf("\nIntroduce tu contraseña para verificarla: ");
+    fgets(contraseña_usuario, sizeof(contraseña_usuario), stdin);
+    // Eliminar el salto de línea al final
+    contraseña_usuario[strcspn(contraseña_usuario, "\n")] = '\0';
+
+    // Verificar si la contraseña es común
+    if (es_contraseña_comun(contraseña_usuario, contraseñas_comunes, total_contraseñas)) {
+        printf(" Tu contraseña es común y podría ser insegura. Considera cambiarla.\n");
+    } else {
+        printf(" Tu contraseña no está en la lista de contraseñas comunes. ¡Bien hecho!\n");
+    }
+
+    return 0;
+}
